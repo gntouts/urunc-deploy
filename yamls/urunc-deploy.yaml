@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: urunc-deploy
+  namespace: kube-system
+spec:
+  selector:
+    matchLabels:
+      name: urunc-deploy
+  template:
+    metadata:
+      labels:
+        name: urunc-deploy
+    spec:
+      serviceAccountName: urunc-deploy
+      containers:
+      - name: urunc-installer
+        image: docker.io/gntouts/urunc-deploy:latest
+        securityContext:
+          privileged: true
+        volumeMounts:
+        - name: host-root
+          mountPath: /host
+        command:
+        - /bin/sh
+        - -c
+        - |
+          cp /scripts/install.sh /host/tmp/install-urunc.sh
+          chmod +x /host/tmp/install-urunc.sh
+          chroot /host /tmp/install-urunc.sh
+      hostPID: true
+      volumes:
+      - name: host-root
+        hostPath:
+          path: /
